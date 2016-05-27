@@ -1,6 +1,8 @@
 
 var crypto 		= require('crypto');
-var MongoDB 	= require('mongodb').Db;
+//var MongoDB 	= require('mongodb').Db;
+var dbConfig 	= require('../config').dbConfig,
+var r 			= require('rethinkdb')
 var Server 		= require('mongodb').Server;
 var moment 		= require('moment');
 
@@ -8,9 +10,9 @@ var moment 		= require('moment');
 	ESTABLISH DATABASE CONNECTION
 */
 
-var dbName = process.env.DB_NAME || 'node-login';
+/*var dbName = process.env.DB_NAME || 'node-login';
 var dbHost = process.env.DB_HOST || 'localhost'
-var dbPort = process.env.DB_PORT || 27017;
+var dbPort = process.env.DB_PORT || 27017;*/
 
 var db = new MongoDB(dbName, new Server(dbHost, dbPort, {auto_reconnect: true}), {w: 1});
 db.open(function(e, d){
@@ -68,6 +70,15 @@ exports.manualLogin = function(user, pass, callback)
 
 exports.addNewAccount = function(newData, callback)
 {
+	r.connect({ host: 'localhost', port: 28015 }, function(err, conn) {
+  		 if(err) {
+		      console.log("[ERROR][addNewAccount]: %s:%s\n%s", err.name, err.msg, err.message);
+		      callback(err);
+		      return
+    	}
+
+  	})
+
 	accounts.findOne({user:newData.user}, function(e, o) {
 		if (o){
 			callback('username-taken');
