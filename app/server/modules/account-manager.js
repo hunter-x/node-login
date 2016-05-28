@@ -80,24 +80,27 @@ r.connect({ host: 'localhost', port: 28015 }, function(err, connection) {
     		.eq(newData.email));}).limit(1).run(connection, function(err, cursor) {
         		if(err) {
           			console.log("[ERROR][addNewAccount]: %s:%s\n%s", err.name, err.msg, err.message);
+          			
         		}
                 else {
+
                 	cursor.toArray(function(err, result) {
-                		console.log("eeeeeeeeeeeeeeeeeeee",result[0].user);
-                		console.log("eeedddddddddddddddddddcxwcsfwe",newData.user);
+                			console.log('ddddddddddddd',result);
             		  if(err) 
             		  	throw err ;
-            		   else if (result[0].user == newData.user) {
+            		 if (result != undefined && result != null && result.length != 0  ) {
+            		  		if (result[0].user == newData.user) {
                 			 	
                   				callback('username-taken');
                 			
-                		}
-                		else if (result[0].email == newData.email){
+                			}
+                			else if (result[0].email == newData.email){
                   				 
                   				callback('email-taken');
                 				
                 			}
-                			else {
+                	 };
+                			
 					            saltAndHash(newData.pass, function(hash) {
 					              newData.pass = hash;
 					              // append date stamp when record was created //
@@ -113,7 +116,7 @@ r.connect({ host: 'localhost', port: 28015 }, function(err, connection) {
 					                }
 					              });
 					            }); 
-          					}
+          					
             		});	   
           }
         })
