@@ -38,13 +38,14 @@ module.exports = function(app) {
 		});
 	});
 	
-/*// logged-in user homepage //
+// logged-in user homepage //
 	
 	app.get('/home', function(req, res) {
 		if (req.session.user == null){
 	// if user is not logged-in redirect back to login page //
 			res.redirect('/');
 		}	else{
+			console.log("req.session.user",req.session.user);
 			res.render('home', {
 				title : 'Control Panel',
 				countries : CT,
@@ -83,7 +84,7 @@ module.exports = function(app) {
 		res.clearCookie('user');
 		res.clearCookie('pass');
 		req.session.destroy(function(e){ res.status(200).send('ok'); });
-	})*/
+	})
 	
 // creating new accounts //
 	
