@@ -102,7 +102,7 @@ exports.manualLogin = function(user, pass, callback)
 
 exports.addNewAccount = function(newData, callback)
 {
-	r.connect({ host: 'localhost', port: 28015 }, function(err, connection) {
+	r.connect({ host: dbConfig.host, port: dbConfig.port}, function(err, connection) {
   		 if(err) {
 		      console.log("[ERROR][addNewAccount]: %s:%s\n%s", err.name, err.msg, err.message);
 		      callback(err);
@@ -155,27 +155,48 @@ exports.addNewAccount = function(newData, callback)
 
   }
 
-exports.updateAccount = function(newData, callback)
-{
-	accounts.findOne({_id:getObjectId(newData.id)}, function(e, o){
-		o.name 		= newData.name;
-		o.email 	= newData.email;
-		o.country 	= newData.country;
-		if (newData.pass == ''){
-			accounts.save(o, {safe: true}, function(e) {
-				if (e) callback(e);
-				else callback(null, o);
-			});
-		}	else{
-			saltAndHash(newData.pass, function(hash){
-				o.pass = hash;
-				accounts.save(o, {safe: true}, function(e) {
-					if (e) callback(e);
-					else callback(null, o);
-				});
-			});
-		}
-	});
+exports.updateAccount = function(newData, callback) {
+  if (newData.pass === '') {
+    delete newData.pass;
+        console.log("ssssssssssssssssssssssssssss")
+
+    update(newData, callback);
+  }
+  else {
+    saltAndHash(newData.pass, function(hash) {
+      newData.pass = hash;
+          console.log("ssssssssddddddddssssssssssssssssssss")
+
+      update(newData, callback);
+    })
+  }
+}
+
+function update(newUserData, callback) {
+  console.log("[DEBUG] update: %j", newUserData);
+	r.connect({ host: dbConfig.host, port: dbConfig.port}, function(err, connection) {
+    if(err) {
+      console.log("[ERROR][update]: %s:%s\n%s", err.name, err.msg, err.message);
+      return callback(err);
+    }
+    console.log("newUserData",newUserData)
+    r.db("nodelogin").table('accounts').filter({user: newUserData.user}).limit(1)
+     .update(newUserData)
+     .run(connection, function(err, result) {
+        if(err) {
+          console.log("[ERROR][update]: %s:%s\n%s", err.name, err.msg, err.message);
+          callback(err.msg);
+        }
+        else if(result.replaced === 1) {
+          callback(null, newUserData);
+        }
+        else {
+          callback(false);
+        }
+        connection.close();
+      }
+    )
+  });
 }
 
 exports.updatePassword = function(email, newPass, callback)
