@@ -82,68 +82,44 @@ r.connect({ host: 'localhost', port: 28015 }, function(err, connection) {
           			console.log("[ERROR][addNewAccount]: %s:%s\n%s", err.name, err.msg, err.message);
         		}
                 else {
-	
-	                   
                 	cursor.toArray(function(err, result) {
+                		console.log("eeeeeeeeeeeeeeeeeeee",result[0].user);
+                		console.log("eeedddddddddddddddddddcxwcsfwe",newData.user);
             		  if(err) 
             		  	throw err ;
-            		   else if (result.user == newData.user) {
-                			 
+            		   else if (result[0].user == newData.user) {
+                			 	
                   				callback('username-taken');
                 			
                 		}
-                		else if (result.user == newData.user){
+                		else if (result[0].email == newData.email){
                   				 
                   				callback('email-taken');
                 				
                 			}
                 			else {
-            saltAndHash(newData.pass, function(hash) {
-              newData.pass = hash;
-              // append date stamp when record was created //
-              newData.date = moment().format('MMMM Do YYYY, h:mm:ss a');
-            
-              r.db("nodelogin").table('accounts').insert(newData).run(connection, function(err, result) {
-                if(result && result.inserted === 1) {
-                  newData['id'] = result['generated_keys'][0];
-                  callback(null, newData);
-                }
-                else {
-                  console.log("je suis la[ERROR][addNewAccount][insert]: %s:%s\n%s", err.name, err.msg, err.message);
-                  callback(null);
-                }
-              });
-            }); 
-          }
-              			
-            		});
-                	   
-
+					            saltAndHash(newData.pass, function(hash) {
+					              newData.pass = hash;
+					              // append date stamp when record was created //
+					              newData.date = moment().format('MMMM Do YYYY, h:mm:ss a');
+					              r.db("nodelogin").table('accounts').insert(newData).run(connection, function(err, result) {
+					                if(result && result.inserted === 1) {
+					                  newData['id'] = result['generated_keys'][0];
+					                  callback(null, newData);
+					                }
+					                else {
+					                  console.log("je suis la[ERROR][addNewAccount][insert]: %s:%s\n%s", err.name, err.msg, err.message);
+					                  callback(null);
+					                }
+					              });
+					            }); 
+          					}
+            		});	   
           }
         })
 
   	})
     }
-
-	/*accounts.findOne({user:newData.user}, function(e, o) {
-		if (o){
-			callback('username-taken');
-		}	else{
-			accounts.findOne({email:newData.email}, function(e, o) {
-				if (o){
-					callback('email-taken');
-				}	else{
-					saltAndHash(newData.pass, function(hash){
-						newData.pass = hash;
-					// append date stamp when record was created //
-						newData.date = moment().format('MMMM Do YYYY, h:mm:ss a');
-						accounts.insert(newData, {safe: true}, callback);
-					});
-				}
-			});
-		}
-	});
-}*/
 
 exports.updateAccount = function(newData, callback)
 {
