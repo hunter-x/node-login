@@ -1,9 +1,9 @@
 
 var crypto 		= require('crypto');
 //var MongoDB 	= require('mongodb').Db;
-var dbConfig 	= require('../config').dbConfig,
-var r 			= require('rethinkdb')
-var Server 		= require('mongodb').Server;
+var dbConfig 	= require('../config').dbConfig;
+var r 			= require('rethinkdb');
+//var Server 		= require('mongodb').Server;
 var moment 		= require('moment');
 
 /*
@@ -14,7 +14,7 @@ var moment 		= require('moment');
 var dbHost = process.env.DB_HOST || 'localhost'
 var dbPort = process.env.DB_PORT || 27017;*/
 
-var db = new MongoDB(dbName, new Server(dbHost, dbPort, {auto_reconnect: true}), {w: 1});
+/*var db = new MongoDB(dbName, new Server(dbHost, dbPort, {auto_reconnect: true}), {w: 1});
 db.open(function(e, d){
 	if (e) {
 		console.log(e);
@@ -32,9 +32,9 @@ db.open(function(e, d){
 			console.log('mongo :: connected to database :: "'+dbName+'"');
 		}
 	}
-});
+});*/
 
-var accounts = db.collection('accounts');
+//var accounts = db.collection('accounts');
 
 /* login validation methods */
 
@@ -70,16 +70,62 @@ exports.manualLogin = function(user, pass, callback)
 
 exports.addNewAccount = function(newData, callback)
 {
-	r.connect({ host: 'localhost', port: 28015 }, function(err, conn) {
+r.connect({ host: 'localhost', port: 28015 }, function(err, connection) {
   		 if(err) {
 		      console.log("[ERROR][addNewAccount]: %s:%s\n%s", err.name, err.msg, err.message);
 		      callback(err);
 		      return
     	}
+    	r.db('nodelogin').table('accounts').filter(function(doc) { return r.or(doc('user').eq(newData.user), doc('email')
+    		.eq(newData.email));}).limit(1).run(connection, function(err, cursor) {
+        		if(err) {
+          			console.log("[ERROR][addNewAccount]: %s:%s\n%s", err.name, err.msg, err.message);
+        		}
+                else {
+	
+	                   
+                	cursor.toArray(function(err, result) {
+            		  if(err) 
+            		  	throw err ;
+            		   else if (result.user == newData.user) {
+                			 
+                  				callback('username-taken');
+                			
+                		}
+                		else if (result.user == newData.user){
+                  				 
+                  				callback('email-taken');
+                				
+                			}
+                			else {
+            saltAndHash(newData.pass, function(hash) {
+              newData.pass = hash;
+              // append date stamp when record was created //
+              newData.date = moment().format('MMMM Do YYYY, h:mm:ss a');
+            
+              r.db("nodelogin").table('accounts').insert(newData).run(connection, function(err, result) {
+                if(result && result.inserted === 1) {
+                  newData['id'] = result['generated_keys'][0];
+                  callback(null, newData);
+                }
+                else {
+                  console.log("je suis la[ERROR][addNewAccount][insert]: %s:%s\n%s", err.name, err.msg, err.message);
+                  callback(null);
+                }
+              });
+            }); 
+          }
+              			
+            		});
+                	   
+
+          }
+        })
 
   	})
+    }
 
-	accounts.findOne({user:newData.user}, function(e, o) {
+	/*accounts.findOne({user:newData.user}, function(e, o) {
 		if (o){
 			callback('username-taken');
 		}	else{
@@ -97,7 +143,7 @@ exports.addNewAccount = function(newData, callback)
 			});
 		}
 	});
-}
+}*/
 
 exports.updateAccount = function(newData, callback)
 {
@@ -222,3 +268,4 @@ var findByMultipleFields = function(a, callback)
 		else callback(null, results)
 	});
 }
+

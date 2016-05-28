@@ -38,7 +38,7 @@ module.exports = function(app) {
 		});
 	});
 	
-// logged-in user homepage //
+/*// logged-in user homepage //
 	
 	app.get('/home', function(req, res) {
 		if (req.session.user == null){
@@ -83,7 +83,7 @@ module.exports = function(app) {
 		res.clearCookie('user');
 		res.clearCookie('pass');
 		req.session.destroy(function(e){ res.status(200).send('ok'); });
-	})
+	})*/
 	
 // creating new accounts //
 	

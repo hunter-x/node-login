@@ -13,15 +13,15 @@ var bodyParser = require('body-parser');
 var errorHandler = require('errorhandler');
 var cookieParser = require('cookie-parser');
 //var MongoStore = require('connect-mongo')(session);
-var rdbStore 	 = require('express-session-rethinkdb')(session);
+var RDBStore 	 = require('express-session-rethinkdb')(session);
 var dbConfig 	 = require('./app/server/config').dbConfig;
-var appconf 	 = require('./app/server/config').appconf;
+var application 	 = require('./app/server/config').application;
 
 
 var app = express();
 
 app.locals.pretty = true;
-app.set('port', appconf.port);
+app.set('port', application.port);
 app.set('views', __dirname + '/app/server/views');
 app.set('view engine', 'jade');
 app.use(cookieParser());
@@ -38,7 +38,7 @@ if (app.get('env') == 'live'){
 	dbURL = 'mongodb://'+process.env.DB_USER+':'+process.env.DB_PASS+'@'+dbHost+':'+dbPort+'/'+dbName;
 }*/
 
-var rdbStore = new RDBStore({
+/*var rdbStore = new RDBStore ({
   connectOptions: {
     servers: [
       { host: dbConfig.host, port: dbConfig.port }
@@ -51,19 +51,18 @@ var rdbStore = new RDBStore({
     timeout: 20,
     timeoutError: 1000
   },
-  table: 'session',
+  table: 'sessions',
   sessionTimeout: 86400000,
   flushInterval: 60000,
   debug: true
-});
+});*/
 
 app.use(session({
 	secret: 'faeb4453e5d14fe6f6d04637f78077c76c73d1b4',
-	proxy: true,
-	resave: true,
+	proxy: false,
+	resave: false,
 	saveUninitialized: true,
 	//store: new MongoStore({ url: dbURL })
-	store: rdbStore
 	})
 );
 
