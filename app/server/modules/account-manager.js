@@ -51,26 +51,58 @@ exports.autoLogin = function(user, pass, callback)
 
 exports.manualLogin = function(user, pass, callback)
 {
-	accounts.findOne({user:user}, function(e, o) {
-		if (o == null){
-			callback('user-not-found');
-		}	else{
-			validatePassword(pass, o.pass, function(err, res) {
-				if (res){
-					callback(null, o);
-				}	else{
-					callback('invalid-password');
-				}
-			});
-		}
-	});
+
+	r.connect({ host: dbConfig.host, port: dbConfig.port }, function(err, connection) {
+			if (err) {
+				console.log("[ERROR][addNewAccount]: %s:%s\n%s", err.name, err.msg, err.message);
+		     	callback(err);
+		      	return
+			}
+			 r.db("nodelogin").table('accounts').filter({user: user}).limit(1).run(connection, function(err, cursor) {
+      if(err) {
+        console.log("[ERROR][manualLogin]: %s:%s\n%s", err.name, err.msg, err.message);
+        callback(null);
+      }
+      else {
+
+       
+          cursor.toArray(function(err, o) {
+            if(err) {
+              console.log("[ERROR][manualLogin]: %s:%s\n%s", err.name, err.msg, err.message);
+              release(connection);
+            }
+            		console.log("o[0].user",o[0].user);
+            		console.log('user',user);
+            	if (o[0].user != user) {
+            		callback('user-not-found');
+            		connection.close();
+            	}
+            
+            else {
+              validatePassword(pass, o[0].pass, function(err, res) {
+                if (res) {
+                  callback(null, o);
+                }
+                else {
+                  callback('invalid-password');
+                }
+                connection.close();
+              });              
+            }
+          });
+     
+      }
+    });
+
+
+	})
 }
 
 /* record insertion, update & deletion methods */
 
 exports.addNewAccount = function(newData, callback)
 {
-r.connect({ host: 'localhost', port: 28015 }, function(err, connection) {
+	r.connect({ host: 'localhost', port: 28015 }, function(err, connection) {
   		 if(err) {
 		      console.log("[ERROR][addNewAccount]: %s:%s\n%s", err.name, err.msg, err.message);
 		      callback(err);
@@ -85,21 +117,18 @@ r.connect({ host: 'localhost', port: 28015 }, function(err, connection) {
                 else {
 
                 	cursor.toArray(function(err, result) {
-                			console.log('ddddddddddddd',result);
             		  if(err) 
             		  	throw err ;
-            		 if (result != undefined && result != null && result.length != 0  ) {
-            		  		if (result[0].user == newData.user) {
-                			 	
+            		 if (result != undefined && result != null && result.length != 0 ) {
+            		  		if (result[0].user == newData.user) {                			 	
                   				callback('username-taken');
-                			
                 			}
-                			else if (result[0].email == newData.email){
-                  				 
+                			else if (result[0].email == newData.email){                				 
                   				callback('email-taken');
-                				
                 			}
-                	 };
+                			connection.close(function(err) { if (err) throw err; })
+
+                	 }
                 			
 					            saltAndHash(newData.pass, function(hash) {
 					              newData.pass = hash;
@@ -114,15 +143,17 @@ r.connect({ host: 'localhost', port: 28015 }, function(err, connection) {
 					                  console.log("je suis la[ERROR][addNewAccount][insert]: %s:%s\n%s", err.name, err.msg, err.message);
 					                  callback(null);
 					                }
+					                connection.close(function(err) { if (err) throw err; })
 					              });
 					            }); 
           					
             		});	   
           }
         })
-
+  	    
   	})
-    }
+
+  }
 
 exports.updateAccount = function(newData, callback)
 {
@@ -195,7 +226,6 @@ exports.delAllRecords = function(callback)
 }
 
 /* private encryption & validation methods */
-
 var generateSalt = function()
 {
 	var set = '0123456789abcdefghijklmnopqurstuvwxyzABCDEFGHIJKLMNOPQURSTUVWXYZ';
@@ -247,4 +277,3 @@ var findByMultipleFields = function(a, callback)
 		else callback(null, results)
 	});
 }
-
