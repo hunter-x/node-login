@@ -7,11 +7,14 @@ module.exports = function(app) {
 
 // main login page //
 	app.get('/', function(req, res){
-								console.log("jejejejjejejejejej",req.cookies.user)
+		console.log("req.cookies.user if undef it will go to manual  : ",req.cookies.user)
 
 	// check if the user's credentials are saved in a cookie //
 		if (req.cookies.user == undefined || req.cookies.pass == undefined){
+			if (req.session.user !=null) {res.redirect('/home');}else{
 			res.render('login', { title: 'Hello - Please Login To Your Account' });
+			console.log("cookie is indefined normal login")
+			}
 		}	
 		else{
 	// attempt automatic login //
@@ -31,6 +34,9 @@ module.exports = function(app) {
 			if (!o){
 				res.status(400).send(e);
 			}	else{
+				console.log('before',req.session.user)
+				console.log('beforeddddddd')
+
 				req.session.user = o;
 				if (req.body['remember-me'] == 'true'){
 					res.cookie('user', o[0].user, { maxAge: 900000 });
@@ -72,13 +78,14 @@ module.exports = function(app) {
 				if (e){
 					res.status(400).send('error-updating-account');
 				}	else{
-					req.session.user = o;
+					req.session.user[0] = o;
 			// update the user's login cookies if they exists //
 					if (req.cookies.user != undefined && req.cookies.pass != undefined){
 						res.cookie('user', o.user, { maxAge: 900000 });
 						res.cookie('pass', o.pass, { maxAge: 900000 });	
 					}
 					res.status(200).send('ok');
+					console.log('success update')
 				}
 			});
 		}
@@ -105,6 +112,7 @@ module.exports = function(app) {
 			country : req.body['country']
 		}, function(e){
 			if (e){
+				console.log('dddddddddddddddddddddddddddddddddddd')
 				res.status(400).send(e);
 			}	else{
 				res.status(200).send('ok');

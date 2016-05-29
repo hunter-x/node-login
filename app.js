@@ -25,6 +25,8 @@ var r = require('rethinkdbdash')({
 
 var store = new RDBStore(r,  {
     browserSessionsMaxAge: 5000, // optional, default is 60000 (60 seconds). Time between clearing expired sessions.
+     sessionTimeout: 86400000,
+
     table: 'sessions' // optional, default is 'session'. Table to store sessions in.
 });
 
