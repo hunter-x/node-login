@@ -24,6 +24,7 @@
     "mongodb": "2.0.45",
     "rethinkdb": "^2.2.1",
     "rethinkdbdash": "^2.3.6",
+    "session-rethinkdb": "^2.0.0",
     "stylus": "0.52.4"
   },
   "engines": {

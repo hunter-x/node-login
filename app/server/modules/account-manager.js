@@ -6,47 +6,47 @@ var r 			= require('rethinkdb');
 //var Server 		= require('mongodb').Server;
 var moment 		= require('moment');
 
-/*
-	ESTABLISH DATABASE CONNECTION
-*/
-
-/*var dbName = process.env.DB_NAME || 'node-login';
-var dbHost = process.env.DB_HOST || 'localhost'
-var dbPort = process.env.DB_PORT || 27017;*/
-
-/*var db = new MongoDB(dbName, new Server(dbHost, dbPort, {auto_reconnect: true}), {w: 1});
-db.open(function(e, d){
-	if (e) {
-		console.log(e);
-	} else {
-		if (process.env.NODE_ENV == 'live') {
-			db.authenticate(process.env.DB_USER, process.env.DB_PASS, function(e, res) {
-				if (e) {
-					console.log('mongo :: error: not authenticated', e);
-				}
-				else {
-					console.log('mongo :: authenticated and connected to database :: "'+dbName+'"');
-				}
-			});
-		}	else{
-			console.log('mongo :: connected to database :: "'+dbName+'"');
-		}
-	}
-});*/
-
-//var accounts = db.collection('accounts');
-
 /* login validation methods */
 
 exports.autoLogin = function(user, pass, callback)
 {
-	accounts.findOne({user:user}, function(e, o) {
-		if (o){
-			o.pass == pass ? callback(o) : callback(null);
-		}	else{
-			callback(null);
-		}
-	});
+	
+	console.log("autoLogin: {%s, %s}", user);
+
+ 	r.connect({ host: dbConfig.host, port: dbConfig.port}, function(err, connection) {
+    if(err) {
+      console.log("[ERROR][autoLogin]: %s:%s\n%s", err.name, err.msg, err.message);
+      return callback(null);
+    }
+    r.db("nodelogin").table('accounts').filter({user: user}).run(connection, function(err, cursor) {
+      if(err) {
+        console.log("[ERROR][autoLogin][filter]: %s:%s\n%s", err.name, err.msg, err.message);
+        return callback(null)
+      };
+    
+              cursor.toArray(function(err, o) {
+            if(err) {
+              console.log("[ERROR][manualLogin]: %s:%s\n%s", err.name, err.msg, err.message);
+              release(connection);
+            }
+
+            	if (o[0].user != user) {
+            		callback('user-not-found');
+            		connection.close();
+            	}
+            
+            else if(o[0].pass === pass) {
+            callback(o);
+          }
+          else {
+            console.log("[INFO ]: User '%s' found but pass doesn't match", user);
+            callback(null);
+          }
+            });
+   
+ });
+   
+  });
 }
 
 exports.manualLogin = function(user, pass, callback)
@@ -165,8 +165,6 @@ exports.updateAccount = function(newData, callback) {
   else {
     saltAndHash(newData.pass, function(hash) {
       newData.pass = hash;
-          console.log("ssssssssddddddddssssssssssssssssssss")
-
       update(newData, callback);
     })
   }
@@ -179,12 +177,12 @@ function update(newUserData, callback) {
       console.log("[ERROR][update]: %s:%s\n%s", err.name, err.msg, err.message);
       return callback(err);
     }
-    console.log("newUserData",newUserData)
+    
     r.db("nodelogin").table('accounts').filter({user: newUserData.user}).limit(1)
      .update(newUserData)
      .run(connection, function(err, result) {
         if(err) {
-          console.log("[ERROR][update]: %s:%s\n%s", err.name, err.msg, err.message);
+          console.log("dddddddddddddddddddddddddd[ERROR][update]: %s:%s\n%s", err.name, err.msg, err.message);
           callback(err.msg);
         }
         else if(result.replaced === 1) {

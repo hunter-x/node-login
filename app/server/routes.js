@@ -7,10 +7,13 @@ module.exports = function(app) {
 
 // main login page //
 	app.get('/', function(req, res){
+								console.log("jejejejjejejejejej",req.cookies.user)
+
 	// check if the user's credentials are saved in a cookie //
 		if (req.cookies.user == undefined || req.cookies.pass == undefined){
 			res.render('login', { title: 'Hello - Please Login To Your Account' });
-		}	else{
+		}	
+		else{
 	// attempt automatic login //
 			AM.autoLogin(req.cookies.user, req.cookies.pass, function(o){
 				if (o != null){
@@ -30,8 +33,8 @@ module.exports = function(app) {
 			}	else{
 				req.session.user = o;
 				if (req.body['remember-me'] == 'true'){
-					res.cookie('user', o.user, { maxAge: 900000 });
-					res.cookie('pass', o.pass, { maxAge: 900000 });
+					res.cookie('user', o[0].user, { maxAge: 900000 });
+					res.cookie('pass', o[0].pass, { maxAge: 900000 });
 				}
 				res.status(200).send(o);
 			}
@@ -49,7 +52,7 @@ module.exports = function(app) {
 			res.render('home', {
 				title : 'Control Panel',
 				countries : CT,
-				udata : req.session.user
+				udata : req.session.user[0]
 			});
 		}
 	});
